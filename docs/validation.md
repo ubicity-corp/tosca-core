@@ -341,7 +341,7 @@ deployment, though — its runner onboards the archive, adds a service with the
 case's inputs and requires it to reach ACTIVE — so a validator is expected to
 disagree with it wherever the failure needs the deployment.
 
-Measured on 2026-11-17 with tosca-core 0.4.1, `tosca-tests` at `d2d9e18`,
+Measured on 2026-11-17 with tosca-core 1.0.0, `tosca-tests` at `d2d9e18`,
 `tosca-profiles` at `2f163057` and the community profiles at `master` `14ead36`
 (0.2; 52 directories found, 46 onboarded, the six above not), **538 of 579 cases
 agree**: v2 success 251/254, v2 failure 103/137, v1 success 124/125, v1 failure
