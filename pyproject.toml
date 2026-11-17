@@ -1,0 +1,65 @@
+[build-system]
+requires = ["setuptools>=77.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tosca-core"
+version = "1.0.0"
+description = "A TOSCA 2.0 and TOSCA Simple Profile 1.3 parser and semantic validator"
+readme = "README.md"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+authors = [
+    { name = "Ubicity Corp.", email = "info@ubicity.com" },
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+requires-python = ">=3.10"
+keywords = ["tosca", "oasis", "validator", "parser", "orchestration"]
+dependencies = [
+    "iso8601",
+    "marshmallow",
+    "regex",
+    "ruamel.yaml",
+    "SQLAlchemy>=2.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/ubicity-corp/tosca-core"
+Documentation = "https://github.com/ubicity-corp/tosca-core/blob/master/docs/api.md"
+Changelog = "https://github.com/ubicity-corp/tosca-core/blob/master/CHANGELOG.md"
+Issues = "https://github.com/ubicity-corp/tosca-core/issues"
+
+[project.optional-dependencies]
+# Dump-only URL fields link entities to a Flask REST server's resources
+# when one is serving; without Flask they are omitted.
+flask = ["Flask"]
+# Flask for tests/test_url_field.py; test_standalone.py checks the core
+# without it, in an interpreter of its own.
+test = ["pytest", "Flask"]
+
+[project.scripts]
+tosca-validate = "tosca_core.lint.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["tosca_core*"]
+
+[tool.setuptools.package-data]
+tosca_core = [
+    "csars/*.csar",
+    "config/tosca_core.yaml",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+# -ra lists every test that did not pass at the end, and --tb=short
+# keeps each traceback to the failing lines.
+addopts = "-ra --tb=short"

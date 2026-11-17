@@ -1,0 +1,31 @@
+name: Tests
+
+on:
+  push:
+    branches: [rk-dev, development, master]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # Flask is deliberately not installed: tests/test_standalone.py
+      # requires tosca-core to work without it
+      - name: Install
+        run: pip install -e ".[test]"
+
+      - name: Test
+        run: pytest

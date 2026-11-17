@@ -1,0 +1,114 @@
+name: Publish to PyPI
+
+# Publishes tosca-core to PyPI when a GitHub Release is published, and only
+# then: pushing a version tag alone publishes nothing. The release's tag must
+# be v<version>, the version in pyproject.toml.
+#
+# Run by hand (Actions > Publish to PyPI > Run workflow), it rehearses the
+# same path against TestPyPI instead: the same tests, build and checks, then
+# an upload to test.pypi.org as <version>.dev<run number>, since neither index
+# accepts a version twice. Rehearse before the first real release.
+#
+# Uploads use trusted publishing, so no token is stored. Each index names
+# this repository, this workflow file (publish.yml) and an environment as a
+# trusted publisher: on pypi.org the environment "pypi", on test.pypi.org
+# "testpypi".
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: The tag names the version being published
+        if: github.event_name == 'release'
+        run: |
+          version=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          if [ "${GITHUB_REF_NAME}" != "v${version}" ]; then
+            echo "::error::release tag ${GITHUB_REF_NAME} is not v${version}, the version in pyproject.toml"
+            exit 1
+          fi
+
+      # A rehearsal uploads a version no index has seen: <version>.dev<run>
+      - name: A development version for the rehearsal
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          python - <<'EOF'
+          import os, re, pathlib
+          path = pathlib.Path("pyproject.toml")
+          text = path.read_text()
+          version = re.search(r'^version = "([^"]+)"', text, re.M).group(1)
+          rehearsal = f"{version}.dev{os.environ['GITHUB_RUN_NUMBER']}"
+          path.write_text(re.sub(r'^version = "[^"]+"', f'version = "{rehearsal}"', text, count=1, flags=re.M))
+          print(f"rehearsing as {rehearsal}")
+          EOF
+
+      # Flask is deliberately not installed: tests/test_standalone.py
+      # requires tosca-core to work without it
+      - name: Test
+        run: |
+          pip install -e ".[test]"
+          pytest
+
+      - name: Build the sdist and wheel
+        run: |
+          pip install build twine
+          python -m build
+          twine check --strict dist/*
+
+      - name: Keep the distributions
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  publish:
+    if: github.event_name == 'release'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/tosca-core
+    permissions:
+      id-token: write   # trusted publishing
+    steps:
+      - name: Fetch the distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Upload to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+  rehearse:
+    if: github.event_name == 'workflow_dispatch'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: testpypi
+      url: https://test.pypi.org/p/tosca-core
+    permissions:
+      id-token: write   # trusted publishing
+    steps:
+      - name: Fetch the distributions
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Upload to TestPyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          repository-url: https://test.pypi.org/legacy/

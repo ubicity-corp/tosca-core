@@ -1,0 +1,73 @@
+# tosca-core configuration
+#
+# The defaults a standalone tosca-core runs with. The database and the
+# working directory are not set here: they default to an in-memory
+# SQLite database and a per-user cache directory, and can be set with the
+# TOSCA_CORE_DB_URI and TOSCA_CORE_DIR environment variables. An
+# application embedding tosca-core (such as an orchestrator) passes its
+# own values to tosca_core.constants.constants.configure() at startup.
+
+# TOSCA definitions versions this parser accepts, each mapped to the
+# normative profile it implies
+SUPPORTED_DEFINITIONS_VERSIONS:
+  tosca_simple_yaml_1_0: "http://docs.oasis-open.org/tosca/ns/simple/yaml/1.3"
+  "http://docs.oasis-open.org/tosca/ns/simple/yaml/1.0": "http://docs.oasis-open.org/tosca/ns/simple/yaml/1.3"
+  tosca_simple_yaml_1_1: "http://docs.oasis-open.org/tosca/ns/simple/yaml/1.3"
+  "http://docs.oasis-open.org/tosca/ns/simple/yaml/1.1": "http://docs.oasis-open.org/tosca/ns/simple/yaml/1.3"
+  tosca_simple_yaml_1_2: "http://docs.oasis-open.org/tosca/ns/simple/yaml/1.3"
+  "http://docs.oasis-open.org/tosca/ns/simple/yaml/1.2": "http://docs.oasis-open.org/tosca/ns/simple/yaml/1.3"
+  tosca_simple_yaml_1_3: "http://docs.oasis-open.org/tosca/ns/simple/yaml/1.3"
+  "http://docs.oasis-open.org/tosca/ns/simple/yaml/1.3": "http://docs.oasis-open.org/tosca/ns/simple/yaml/1.3"
+  tosca_2_0:
+
+# Modules that contain models that need to be reflected in database
+# schema by SQLAlchemy. An embedding application extends this list with
+# its own model modules.
+MODEL_MODULES:
+  - tosca_core.models.repository
+  - tosca_core.models.csar_repository
+  - tosca_core.models.profile
+  - tosca_core.models.imprt
+  - tosca_core.models.type
+  - tosca_core.models.managed_type
+  - tosca_core.models.node_type
+  - tosca_core.models.group_type
+  - tosca_core.models.policy_type
+  - tosca_core.models.relationship_type
+  - tosca_core.models.data_type
+  - tosca_core.models.artifact_type
+  - tosca_core.models.interface_type
+  - tosca_core.models.capability_type
+  - tosca_core.models.declaration
+  - tosca_core.models.managed_declaration
+  - tosca_core.models.node_declaration
+  - tosca_core.models.group_declaration
+  - tosca_core.models.relationship_declaration
+  - tosca_core.models.property_declaration
+  - tosca_core.models.function_declaration
+  - tosca_core.models.artifact_declaration
+  - tosca_core.models.interface_declaration
+  - tosca_core.models.operation_declaration
+  - tosca_core.models.capability_declaration
+  - tosca_core.models.policy_declaration
+  - tosca_core.models.service_template
+  - tosca_core.models.substitution_mappings
+  - tosca_core.models.workflow_template
+  - tosca_core.models.template
+  - tosca_core.models.managed_template
+  - tosca_core.models.node_template
+  - tosca_core.models.group_template
+  - tosca_core.models.relationship_template
+  - tosca_core.models.artifact
+  - tosca_core.models.interface_template
+  - tosca_core.models.operation_template
+  - tosca_core.models.capability_template
+  - tosca_core.models.policy_template
+
+# Modules that extend validation (tosca_core.extensions): implementation
+# checks, and an evaluator for functions implemented by artifacts.
+# Standalone there are none: validation accepts an implementation artifact
+# of any type, and a function a profile implements with an artifact, Python
+# or not, is left unevaluated. An embedding application that runs artifacts
+# lists its extension modules here.
+EXTENSION_MODULES: []
