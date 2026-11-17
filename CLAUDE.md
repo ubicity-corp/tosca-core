@@ -16,8 +16,6 @@ tosca-validate -p <profile-tree> <target>...   # validate from the shell (see RE
 
 **Cutting a release** is a version bump in `pyproject.toml`, an entry in `CHANGELOG.md` when the public API changes (semantic versioning: an incompatible change only in a major release), and an annotated tag `v<version>`. **Publishing to PyPI** is publishing a GitHub Release for that tag: `.github/workflows/publish.yml` runs only then (a pushed tag alone publishes nothing), checks the tag is `v<version>`, runs the tests, builds and `twine check`s, and uploads by trusted publishing, so no token is stored. Run by hand (`workflow_dispatch`), the same workflow rehearses the path against TestPyPI, uploading `<version>.dev<run number>`, since neither index accepts a version twice.
 
-`docs/validation.md` states a dated measurement against the `tosca-tests` corpus, every disagreement named. Re-measure it when validation or the corpus changes.
-
 **Tests** are targeted regression suites, not broad coverage:
 
 - `tests/test_standalone.py` — every module imports, and a catalog builds and templates validate, implementation artifacts among them with nothing installed to run them, with Flask and any embedding application unimportable, and that nothing extends validation, no function evaluator is installed, and no template can instantiate
@@ -74,6 +72,7 @@ tosca-validate -p <profile-tree> <target>...   # validate from the shell (see RE
 - **The library does not configure logging** or write outside `WORK_DIR` and the database. It reads a `file:` repository only inside its CSAR or a configured `LOCAL_REPOSITORY_ROOTS` entry; `WORK_DIR` itself is not readable to a template.
 - **A catalog is the database and the directory its CSARs were unpacked into.** The database records each onboarded CSAR by the absolute `file://` URL of that directory (under `LOCAL_REPO_ROOT`), and where an evaluator is installed a profile-defined function runs its artifact from there. Anything that caches or moves a catalog carries both and rewrites the URLs, as `tosca_core/lint/cache.py` does (`restore()`); a database alone makes such functions fail as if the values they check were invalid.
 - **Files and messages name no internal document** of any embedding application; a comment explains its point in place.
+- **The docs stand on their own.** The README and `docs/` are public: they name no private repository, no embedding application's files or commands, and no product; an embedding application is "an application that embeds tosca-core".
 
 ## Layout
 
@@ -91,7 +90,7 @@ tosca_core/schema/        Marshmallow schemas parsing TOSCA YAML (v1/ = Simple P
 tosca_core/validate/      semantic validation
 tosca_core/builtin/       built-in TOSCA functions and data types
 tosca_core/lint/          tosca-validate: the command line, and the catalog cache it validates against
-docs/validation.md        tosca-validate in full: output, profile trees, restriction, cache, limits, the tosca-tests measurement
+docs/validation.md        tosca-validate in full: output, profile trees, restriction, cache, what validation leaves to the application
 docs/api.md               the public API: the two tiers, the versioning rule, every public name, the resolve_node contract
 CHANGELOG.md              what each release changed in the public API, and what to do
 .github/workflows/        tests.yml (every push), publish.yml (PyPI, on a published GitHub Release)

@@ -15,14 +15,14 @@ What tosca-core promises to keep stable, and what it does not.
 Each is listed in full below. The names of 2 and 4, with the error types
 and the configuration object, are exported by the `tosca_core` package
 itself (`from tosca_core import validate_csar`); that list is the
-library's public surface.
+library's public API.
 
 **Internal**, and free to change in any release: everything else. That
 includes the model classes (types, declarations, templates, profiles) and
 their methods, the Marshmallow schemas, the ingest pipeline
 (`tosca_core.actions`), `tosca_core.validate`, the built-in functions, and
-the database tables. An application that reaches into them, as the Ubicity
-orchestrator does, pins tosca-core to an exact version and moves with it.
+the database tables. An application that reaches into them pins tosca-core
+to an exact version and moves with it.
 
 ## Versions
 
@@ -46,7 +46,9 @@ tosca-validate [-p DIR]... [--only-profile GLOB]... [--exclude-profile GLOB]...
 
 The options are documented in [validation.md](validation.md). Exit status:
 `0` every target valid, `1` any finding or unreadable target, `2` a usage
-error or a target a restricted catalog refused.
+error, a catalog that cannot be built, or a target a restricted catalog
+refused. A refusal takes precedence: a run with one exits `2` whatever the
+other targets' verdicts.
 
 `-f json` writes one object:
 
@@ -80,6 +82,7 @@ change in any release.
 | `bootstrap(db_uri=None)` | bind the database (`DB_URI` by default), import the model modules and `EXTENSION_MODULES` |
 | `create_tables()` | create the catalog's tables |
 | `load_normative_profiles()` | onboard the TOSCA 2.0 and Simple Profile 1.3 profiles tosca-core ships; raises `CatalogError` |
+| `CatalogError` | raised when a normative profile does not onboard; `csar_name` names it and `errors` holds the validator's findings |
 | `validate_csar(path, name=None, skip_file_checks=False)` | validate a CSAR, CSAR directory or TOSCA file; persists nothing |
 | `onboard_csar(path, name=None)` | validate and add to the catalog, without committing; returns `(repository, errors)` |
 | `init_db(db_uri)` | bind the database only |
@@ -93,7 +96,7 @@ change in any release.
 
 `{}` when the target is valid. A string when it cannot be read at all: not
 found, not a CSAR, no metadata, an empty archive. Otherwise the errors as a
-nested dict shaped like the documents: keyed by file, then by each step of
+nested dict that follows the structure of the documents: keyed by file, then by each step of
 the YAML path to what is wrong (a keyname, a template name, a list index as
 a string), with a message, or a list of messages, at the end of each path;
 `line`, beside the keys it locates, is the line number where the validator
@@ -120,10 +123,10 @@ takes effect.
 | Setting | Default | Environment |
 |---|---|---|
 | `DB_URI` | `sqlite://` (in memory) | `TOSCA_CORE_DB_URI` |
-| `WORK_DIR` | `~/.cache/tosca-core` | `TOSCA_CORE_DIR` |
+| `WORK_DIR` | `tosca-core` under `XDG_CACHE_HOME`, or `~/.cache/tosca-core` | `TOSCA_CORE_DIR` |
 | `LOCAL_REPO_ROOT` | `WORK_DIR/repository` | |
 | `LOCAL_REPOSITORY_ROOTS` | none | `TOSCA_CORE_LOCAL_REPOSITORY_ROOTS` (absolute, separated like `PATH`) |
-| `STATE_NAMES` | none: any state accepted | |
+| `STATE_NAMES`, the states the application's workflows use; a `set_state` naming another is logged as a warning, never refused | none: any state accepted | |
 | `MODEL_MODULES`, `EXTENSION_MODULES` | tosca-core's models; none | |
 | `SUPPORTED_DEFINITIONS_VERSIONS` | TOSCA 2.0 and Simple Profile 1.0–1.3 | |
 
@@ -148,8 +151,8 @@ installed, such a function is left unevaluated.
 
 **A service of instances.** tosca-core creates no instances, but evaluates
 paths against an application's when the application asks it to (a property
-or attribute read at runtime). For a named head -- a path starting with a node
-template's name rather than `SELF`, `SOURCE` or `TARGET` -- it asks the
+or attribute read at runtime). For a named head (a path starting with a node
+template's name rather than `SELF`, `SOURCE` or `TARGET`) it asks the
 service the context belongs to:
 
 ```python

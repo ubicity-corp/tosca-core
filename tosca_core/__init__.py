@@ -5,10 +5,10 @@ Parses TOSCA 2.0 and TOSCA Simple Profile 1.3 service templates and
 profiles, packaged as CSARs or as single files, into a model of types,
 declarations and templates, and validates them against TOSCA semantics.
 
-The names exported here are the public API (docs/api.md): kept stable
-within a minor version, and changed only in a minor version, with notes,
-before 1.0. Everything else -- the model classes, the schemas, the ingest
-pipeline -- is internal and may change in any release.
+The names exported here are the public API (docs/api.md), kept under
+semantic versioning: only a major release changes them incompatibly, with
+notes in CHANGELOG.md. Everything else -- the model classes, the schemas,
+the ingest pipeline -- is internal and may change in any release.
 """
 from importlib import import_module
 from importlib.metadata import version, PackageNotFoundError
