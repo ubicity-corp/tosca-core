@@ -24,6 +24,13 @@ ALTER TABLE tosca_import ADD COLUMN implements BOOLEAN DEFAULT FALSE;
 A function signature's existing implementation artifacts, with no defining
 profile recorded, are taken as their own profile's.
 
+**Workflow inputs follow the rules service-template inputs follow.** Both are
+incoming parameters (TOSCA 2.0, Parameter Definition), and one implementation
+now validates the values supplied for either. For a workflow this changes two
+things: a value supplied for an input with a fixed `value` is refused, since a
+fixed value cannot be changed, where it was accepted; and a required input
+with a fixed `value` needs nothing supplied, where it was refused.
+
 ## 1.0.0
 
 The first release published on PyPI. The public API is 0.4's, unchanged, and

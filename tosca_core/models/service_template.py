@@ -28,6 +28,7 @@ from sqlalchemy.ext.mutable import MutableDict
 
 # Exceptions
 import tosca_core.models.exceptions as te
+import tosca_core.models.input_values
 
 # Support for TOSCA keywords that are shared between all entities
 import tosca_core.models.entity
@@ -306,75 +307,19 @@ class ToscaServiceTemplate(tosca_core.models.entity.ToscaEntityMixin, db.Model):
 
 
     def validate_input_values(self, inputs: dict[str, Any], check_required: bool = True) -> dict[str, Any]:
-        """Validate inputs passed to this service template when deploying a
-        service.
-
-        TODO: try to reuse code from
-        ToscaDeclaration::validate_property_templates
+        """Validate inputs passed to this service template when deploying or
+        updating a service (tosca_core.models.input_values).
 
         Args:
           inputs(dict): the input values to validate against the input
             declarations in this service template
-          check_required(bool): flag to indicate if we need to make
-            sure that all required inputs are present. All required
-            inputs must be present during initial service
-            instantiation but not during service update.
+          check_required(bool): whether every required input must be
+            satisfied: when a service is instantiated, not when it is
+            updated
         Returns:
           (possibly empty) dict of validation errors
-        Raises:
-          None
         """
-        # Validate all inputs against the input declarations
-        input_declarations = self.inputs
-        validation_errors = {}
-        for input_name, input_value in inputs.items():
-            logger.debug("%s: validating input '%s'", self.id, input_name)
-            try:
-                # Find input declaration
-                input_declaration = input_declarations[input_name]
-
-                # Make sure this input value doesn't override a fixed
-                # value defined in the input declaration
-                try:
-                    value = input_declaration.value
-                    validation_errors[input_name] = 'overriding value from definition is not allowed'
-                except AttributeError:
-                    # No fixed value defined in the
-                    # declaration. 
-                    # Validate input value against input declaration
-                    try:
-                        validated_input = input_declaration.validate_value(self, input_value)
-                    except te.ValidationError as e:
-                        logger.error("'%s' input '%s': '%s' is invalid value for %s",
-                                     self.id, input_name, input_value,
-                                     input_declaration.type)
-                        validation_errors[input_name] = e.errors
-                    except Exception as error:
-                        logger.error("%s: error validating inputs: %s", self.id, error)
-                        validation_errors[input_name] = "validator error ({0})".format(error)
-            except KeyError:
-                logger.error("'%s': undefined input '%s'", self.id, input_name)
-                validation_errors[input_name] = 'not previously defined'
-
-        # Make sure all required inputs are present if necessary
-        if check_required:
-            for input_name, input_declaration in input_declarations.items():
-                if input_declaration.is_required():
-                    logger.debug("Checking value for required input '%s'", 
-                                 input_name)
-                    try:
-                        input_value = inputs[input_name]
-                    except (KeyError, AttributeError):
-                        error = input_declaration.validate_value_presence(self, inputs)
-                        if error:
-                            validation_errors[input_name] = error
-                    except Exception as e:
-                        logger.error("error checking required input '%s': %s",
-                                     input_name, e)
-                        validation_errors[input_name] = 'validator error <{0}>'.format(str(e))
-
-        # Everything OK
-        return validation_errors
+        return tosca_core.models.input_values.validate_input_values(self, self.inputs, inputs, check_required)
 
 
     ################################################################################
