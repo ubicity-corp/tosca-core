@@ -131,12 +131,16 @@ def _entry_data(root: Path) -> dict | None:
 
 
 def _imports_of(data: dict) -> set[str]:
-    """The profile names a parsed document imports"""
-    return {
+    """The profile names a parsed document imports, the one an
+    implementing file implements among them: it onboards only after it"""
+    names = {
         item["profile"]
         for item in data.get("imports") or []
         if isinstance(item, dict) and isinstance(item.get("profile"), str)
     }
+    if isinstance(data.get("implements"), str):
+        names.add(data["implements"])
+    return names
 
 
 def _own_name(data: dict) -> str | None:

@@ -12,7 +12,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 # Marshmallow support
-from marshmallow import fields
+from marshmallow import fields, post_dump
 from tosca_core.schema.named_object_map import NamedObjectMap
 
 # Schemas on which this schema depends
@@ -50,3 +50,42 @@ class ProfileDetailSchema(ProfileSchema):
     interface_types = NamedObjectMap(fields.Nested(InterfaceTypeSchema))
     policy_types = NamedObjectMap(fields.Nested(PolicyTypeSchema))
     functions = NamedObjectMap(fields.Nested(FunctionDeclarationSchema))
+
+    @post_dump(pass_original=True)
+    def show_implementations(self, data: dict, profile, **kwargs) -> dict:
+        """An implementing profile shows the profile it implements and,
+        as its file gives them, the implementations it supplies: each
+        function with its signatures in order, an empty entry for a
+        signature it leaves alone."""
+        implemented = getattr(profile, 'implements', None)
+        if implemented is None:
+            return data
+        data['implements'] = implemented.name
+        data['functions'] = implementations(profile)
+        return data
+
+
+def implementations(profile) -> dict:
+    """The implementations an implementing profile supplies, by function
+    name, in the form its file gives them"""
+    from .operation_implementation import OperationImplementationSchema
+    implemented: dict = {}
+    for artifact in profile.defined_artifacts:
+        signature = artifact._containing_signature
+        if signature is not None and signature.function is not None:
+            implemented.setdefault(signature.function, set()).add(signature)
+    schema = OperationImplementationSchema()
+    shown = {}
+    for function in sorted(implemented, key=lambda f: f.name):
+        mine = implemented[function]
+        last = max(signature.position for signature in mine)
+        entries = []
+        for signature in function.signatures[:last + 1]:
+            if signature in mine:
+                artifacts = signature.artifacts
+                entries.append({'implementation': schema.dump(
+                    {'primary': artifacts[-1], 'dependencies': artifacts[:-1]})})
+            else:
+                entries.append({})
+        shown[function.name] = {'signatures': entries}
+    return shown

@@ -1611,6 +1611,7 @@ class ToscaFunctionDeclaration(tosca_core.models.entity.ToscaEntityMixin, db.Mod
 
     def __init__(self,
                  signatures: Optional[list[ToscaSignature]] = None,
+                 implementation: Optional[Any] = None,
                  **kwargs: Any
     ) -> None:
         # First, call superclass constructor
@@ -1618,6 +1619,11 @@ class ToscaFunctionDeclaration(tosca_core.models.entity.ToscaEntityMixin, db.Mod
 
         # ToscaFunctionDeclaration-specific initialization
         if signatures: self.signatures = signatures
+
+        # A function-level implementation as written, held only while
+        # an implementing file is loaded (not stored): it is loaded
+        # onto each signature it applies to.
+        self.function_implementation = implementation
 
 
     ################################################################################

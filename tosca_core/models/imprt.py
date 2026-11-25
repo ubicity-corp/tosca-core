@@ -32,6 +32,11 @@ class ToscaImport(db.Model):
     # Fields
     id =          db.Column(db.Integer, primary_key=True, autoincrement=True)
     implicit =    db.Column(db.Boolean, default=False)
+    # Set where the importer is an implementing file and the imported
+    # profile the one it implements: the row puts the implemented
+    # profile's names in the file's default namespace, and keeps the
+    # implemented profile from being deleted while the file exists.
+    implements =  db.Column(db.Boolean, default=False)
     namespace =   db.Column(db.String, nullable=True)
     importer_id = db.Column(db.Integer, db.ForeignKey('tosca_profile.id'))
     imported_id = db.Column(db.Integer, db.ForeignKey('tosca_profile.id'))

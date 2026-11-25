@@ -178,7 +178,7 @@ def _ingest_csar_file(csar_file_name: str, csar_path_name: str,
     # but not both
     profile = csar_repo.profiles[0] if csar_repo.profiles else None
     try:
-        if profile.has_well_known_name:
+        if profile.has_well_known_name or profile.implements is not None:
             # This CSAR defines a profile. Make sure it does not also
             # define a service catalog entry.
             try:
@@ -294,6 +294,11 @@ def load_tosca_data(profile: tn.ToscaProfile, tosca_data) -> dict:
     logger.debug("Load %s TOSCA file data into %s",
                  tosca_data.tosca_definitions_version, profile.name)
 
+    # An implementing file adds implementations to another profile's
+    # definitions and declares nothing of its own.
+    if getattr(tosca_data, 'implements', None):
+        return load_implementing_data(profile, tosca_data)
+
     # First, initialize validation errors dict
     validation_errors = {}
 
@@ -356,6 +361,215 @@ def load_tosca_data(profile: tn.ToscaProfile, tosca_data) -> dict:
 
     # All done
     return validation_errors
+
+
+# Sections an implementing file may not contain. The type sections whose
+# operations an implementing file could refine are told apart: that is
+# grammar not yet supported, where the others declare something new.
+_DECLARING_SECTIONS = ('artifact_types', 'data_types', 'capability_types',
+                       'interface_types', 'service_template')
+_OPERATION_SECTIONS = ('node_types', 'relationship_types', 'group_types',
+                       'policy_types')
+
+# What a signature entry in an implementing file may not contain:
+# everything but 'implementation' belongs to the implemented profile.
+_SIGNATURE_KEYNAMES = (('arguments', lambda s: bool(s.arguments)),
+                       ('result', lambda s: s.result is not None),
+                       ('variadic', lambda s: s._variadic is not None),
+                       ('description', lambda s: bool(s._description)),
+                       ('metadata', lambda s: bool(s._meta_data)))
+
+
+def load_implementing_data(profile: tn.ToscaProfile, tosca_data) -> dict:
+    """Load an implementing file: a TOSCA file whose 'implements' names
+    an onboarded profile, and which adds implementations to that
+    profile's functions and declares nothing of its own. The
+    implementations are stored as artifacts on the implemented
+    profile's signatures, each recording this profile as the one that
+    defined it.
+
+    Args:
+      profile(ToscaProfile): the profile created for the implementing
+        file
+      tosca_data(ToscaData): the file's data
+
+    Returns:
+      validation_errors(dict): (possibly empty) dict of validation
+        errors
+    """
+    validation_errors = {}
+
+    # Nothing of its own: no types, no service template, no policies.
+    for section in _DECLARING_SECTIONS:
+        if getattr(tosca_data, section, None):
+            validation_errors[section] = 'an implementing file declares nothing of its own'
+    for section in _OPERATION_SECTIONS:
+        if getattr(tosca_data, section, None):
+            validation_errors[section] = 'an implementing file may implement functions only'
+
+    # Repositories the implementations' artifacts may name, and imports
+    # of the profiles that declare their artifact types.
+    errors = process_repositories(profile, tosca_data)
+    if errors:
+        validation_errors['repositories'] = errors
+    errors = process_imports(profile, tosca_data)
+    if errors:
+        validation_errors['imports'] = errors
+    errors = process_meta_data(profile, tosca_data)
+    if errors:
+        validation_errors.update(errors)
+
+    # The implemented profile, whose names are in this file's default
+    # namespace.
+    implemented, error = process_implements(profile, tosca_data.implements)
+    if error:
+        validation_errors['implements'] = error
+    if validation_errors:
+        return validation_errors
+
+    # The implementations
+    errors = process_implementations(profile, implemented, tosca_data)
+    if errors:
+        validation_errors['functions'] = errors
+    return validation_errors
+
+
+def process_implements(profile: tn.ToscaProfile, implemented_name: str) -> tuple:
+    """Record that 'profile' implements the onboarded profile named
+    'implemented_name', as an import into its default namespace flagged
+    as 'implements'.
+
+    Returns:
+      (implemented profile, None), or (None, the reason it is refused)
+    """
+    if implemented_name == profile.name:
+        return None, 'a profile cannot implement itself'
+    try:
+        implemented = tn.get_profile_by_name(implemented_name)
+    except sqlalchemy.orm.exc.NoResultFound:
+        return None, f"profile '{implemented_name}' is not onboarded"
+    if implemented.implements is not None:
+        return None, f"'{implemented_name}' is itself an implementing file"
+    _import = ti.ToscaImport()
+    db.session.add(_import)
+    _import.imported = implemented
+    _import.implements = True
+    profile.imported.append(_import)
+    return implemented, None
+
+
+def process_implementations(profile: tn.ToscaProfile, implemented: tn.ToscaProfile,
+                            tosca_data) -> dict:
+    """Attach the implementations an implementing file gives to the
+    signatures of the implemented profile's functions.
+
+    A 'functions' entry names a function of the implemented profile and
+    holds only 'implementation': at the function level, applying to
+    every signature, or per signature, by position in the function's
+    list of signatures (signatures have no names to address them by), an
+    empty entry leaving one to the function-level implementation. A
+    signature that already has an implementation, declared with it or
+    from another implementing file, is a conflict.
+
+    Returns:
+      validation_errors(dict): (possibly empty), keyed by function name
+    """
+    try:
+        functions = tosca_data.functions
+    except AttributeError:
+        return {}
+
+    validator = get_validator('ToscaFunction')
+    validation_errors = {}
+    for function_name, entry in functions.items():
+        errors = implement_function(profile, implemented, function_name, entry, validator)
+        if errors:
+            validation_errors[function_name] = errors
+    return validation_errors
+
+
+def implement_function(profile: tn.ToscaProfile, implemented: tn.ToscaProfile,
+                       function_name: str, entry, validator) -> dict | str | None:
+    """Attach one 'functions' entry's implementations (see
+    process_implementations)"""
+    # Keynames other than 'implementation' belong to the implemented
+    # profile.
+    disallowed = [keyname for keyname, present in
+                  (('description', bool(entry._description)),
+                   ('metadata', bool(entry._meta_data)))
+                  if present]
+    if disallowed:
+        return {keyname: 'not allowed in an implementing file' for keyname in disallowed}
+
+    try:
+        function = implemented.get_local_function(function_name)
+    except te.FunctionNotFound:
+        return f"not a function of '{implemented.name}'"
+
+    entries = list(entry.signatures)
+    if len(entries) > len(function.signatures):
+        return (f"{len(entries)} signatures given, '{function_name}' "
+                f"declares {len(function.signatures)}")
+    errors = {}
+    for position, signature_entry in enumerate(entries):
+        disallowed = [keyname for keyname, present in _SIGNATURE_KEYNAMES
+                      if present(signature_entry)]
+        if disallowed:
+            errors[str(position)] = {keyname: 'not allowed in an implementing file'
+                                     for keyname in disallowed}
+    if errors:
+        return {'signatures': errors}
+
+    function_level = getattr(entry, 'function_implementation', None)
+    for position, signature in enumerate(function.signatures):
+        if position < len(entries) and entries[position].artifacts:
+            artifacts = list(entries[position].artifacts)
+        elif function_level is not None:
+            artifacts = load_implementation(function_level)
+            if isinstance(artifacts, dict):
+                return {'implementation': artifacts}
+        else:
+            continue
+        if not artifacts:
+            continue
+
+        # One implementation per signature.
+        if signature.artifacts:
+            owner = signature.artifacts[-1].defining_profile or function.profile
+            errors[str(position)] = (f"already implemented by '{owner.label}'"
+                                     if owner is not function.profile else
+                                     f"'{implemented.name}' declares its implementation")
+            continue
+
+        for artifact in artifacts:
+            artifact.defining_profile = profile
+            signature.artifacts.append(artifact)
+        # Validation names a signature by its position, as it does when the
+        # function is declared; one loaded from the catalog has no name.
+        signature.name = str(position)
+        error = validator.validate_implementation(function, signature)
+        if error:
+            errors[str(position)] = error
+    return {'signatures': errors} if errors else None
+
+
+def load_implementation(data) -> list | dict:
+    """Load an implementation as written into new artifacts, dependencies
+    first and the primary last, as a signature holds them.
+
+    Returns:
+      the artifacts, or the validation errors loading them
+    """
+    from marshmallow import ValidationError
+    from tosca_core.schema.v2.operation_implementation import OperationImplementationSchema
+    try:
+        implementation = OperationImplementationSchema().load(data)
+    except ValidationError as e:
+        return e.messages
+    artifacts = list(implementation.get('dependencies') or [])
+    if implementation.get('primary') is not None:
+        artifacts.append(implementation['primary'])
+    return artifacts
 
 
 def process_repositories(profile: tn.ToscaProfile, tosca_data) -> dict | None:
@@ -615,8 +829,16 @@ def process_functions(profile: tn.ToscaProfile, tosca_data) -> dict | None:
     # Validate functions
     validation_errors = {}
     for function_name, function in functions.items():
+        if getattr(function, 'function_implementation', None) is not None:
+            validation_errors[function_name] = {
+                'implementation': 'a function-level implementation is allowed only '
+                                  'in an implementing file'}
+            continue
         try:
             profile.functions[function_name] = function
+            for signature in function.signatures:
+                for artifact in signature.artifacts:
+                    artifact.defining_profile = profile
             errors = validator.validate_function_declaration(function)
             if errors:
                 logger.error("TOSCA file data: invalid function '%s'", 
@@ -1007,6 +1229,11 @@ def import_tosca_file_from_repo(profile: tn.ToscaProfile, containing_tosca_data,
     if errors:
         return errors
 
+    # An implementing file takes effect by being onboarded, never by
+    # being imported.
+    if getattr(tosca_data, 'implements', None):
+        return 'an implementing file cannot be imported'
+
     # Do the TOSCA file data define a profile?
     try:
         profile_name = tosca_data.profile
@@ -1090,9 +1317,13 @@ def import_well_known_profile(profile: tn.ToscaProfile, containing_tosca_data, _
         # Must be Version 2
         well_known_profile_name = _import.profile
 
-    # Perform the import
+    # Perform the import. An implementing profile takes effect by being
+    # onboarded, never by being imported.
+    imported = tn.get_profile_by_name(well_known_profile_name)
+    if imported.implements is not None:
+        return 'an implementing file cannot be imported'
     db.session.add(_import)
-    _import.imported = tn.get_profile_by_name(well_known_profile_name)
+    _import.imported = imported
     profile.imported.append(_import)
     logger.debug("Importing existing profile '%s'", well_known_profile_name)
     return None

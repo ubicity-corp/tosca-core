@@ -5,6 +5,25 @@ What changed in each release that changes the public API
 semantic versioning: only a major release changes the public API
 incompatibly.
 
+## Unreleased
+
+**Implementing files** ([docs/validation.md](docs/validation.md#implementing-files)):
+a TOSCA 2.0 file with a top-level `implements` adds implementations to an
+onboarded profile's functions, at the function level or per signature. New
+grammar only; every file valid before is valid now, except that an ordinary
+file still may not give a function-level `implementation`.
+
+**Two new columns.** An existing database needs them added before the new
+version opens it; a new database gets them from `create_tables()`:
+
+```sql
+ALTER TABLE tosca_template ADD COLUMN _defining_profile_id INTEGER REFERENCES tosca_profile(id);
+ALTER TABLE tosca_import ADD COLUMN implements BOOLEAN DEFAULT FALSE;
+```
+
+A function signature's existing implementation artifacts, with no defining
+profile recorded, are taken as their own profile's.
+
 ## 1.0.0
 
 The first release published on PyPI. The public API is 0.4's, unchanged, and

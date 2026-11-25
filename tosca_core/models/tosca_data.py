@@ -56,6 +56,7 @@ class ToscaData(object):
                  meta_data: Optional[Any] = None,
                  description: Optional[str] = None,
                  profile: Optional[str] = None,
+                 implements: Optional[str] = None,
                  repositories: Optional[dict[str, Any]] = None,
                  imports: Optional[list[Any]] = None,
                  artifact_types: Optional[dict[str, Any]] = None,
@@ -81,6 +82,7 @@ class ToscaData(object):
         if meta_data: self.meta_data = meta_data
         if description: self.description = description
         if profile: self.profile = profile
+        if implements: self.implements = implements
         if dsl_definitions: self.dsl_definitions = dsl_definitions
         if repositories: self.repositories = repositories
         if imports: self.imports = imports

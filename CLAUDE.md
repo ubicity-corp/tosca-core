@@ -54,6 +54,7 @@ tosca-validate -p <profile-tree> <target>...   # validate from the shell (see RE
 - `tests/test_artifact_file_location.py` — where an artifact's file is looked for: under its named repository from any template in the archive, or beside the template that declares it
 - `tests/test_other_definitions_names.py` — how the service templates an archive's Other-Definitions carry are named
 - `tests/test_artifact_path_steps.py` — `split_requirement_step`: what follows `RELATIONSHIP` in a `$get_artifact` path
+- `tests/test_implementing_files.py` — implementing files: implementations stored as artifacts on the implemented signatures with the implementing profile as their profile (repository, file, type scope), function-level and per-signature by position, what is refused (unknown function, extra signatures, other keynames, declarations, a profile not onboarded, a conflict, importing one, a function-level implementation in an ordinary file), deleting either profile, and `profile show` on both
 - `tests/test_requirement_mapping_short_name.py` — a requirement mapping keyed by a name of any length, two letters among them, is a name and not a [name, count] pair
 
 ## The rules that keep it standalone

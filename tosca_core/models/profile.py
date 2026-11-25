@@ -97,6 +97,27 @@ class ToscaProfile(tosca_core.models.entity.ToscaEntityMixin, db.Model):
                 if well_known_name: return well_known_name
         return None
 
+    # The profile this profile implements, where it was defined by an
+    # implementing file; None otherwise.
+    @property
+    def implements(self) -> Optional["ToscaProfile"]:
+        for _import in self.imported:
+            if _import.implements:
+                return _import.imported
+        return None
+
+    # The implementing profiles that implement this one.
+    @property
+    def implemented_by(self) -> list["ToscaProfile"]:
+        return [_import.importer for _import in self.importer
+                if _import.implements and _import.importer is not None]
+
+    # How a profile is named to an operator: its name where it has a
+    # well-known one, otherwise its ID.
+    @property
+    def label(self) -> str:
+        return self.name if self.has_well_known_name else f"Profile {self.id}"
+
     ################################################################################
     # Model Navigation.  
     ################################################################################
@@ -683,10 +704,13 @@ class ToscaProfile(tosca_core.models.entity.ToscaEntityMixin, db.Model):
 
     def delete(self, cleanup_imports: bool = True, check_only: bool = False) -> Optional[bool]:
         # Is this profile currently imported by some other profile?
-        if imported_by := db.session.execute(
-                select(ToscaImport.importer_id).where(ToscaImport.imported_id == self.id).limit(
-                    1)).scalar_one_or_none():
-            msg = f"Cannot delete Profile {self.id}. It is imported by Profile {imported_by} (and maybe others)."
+        if row := db.session.execute(
+                select(ToscaImport.importer_id, ToscaImport.implements).where(
+                    ToscaImport.imported_id == self.id).where(
+                        ToscaImport.importer_id.is_not(None)).limit(1)).first():
+            imported_by, implements = row
+            relation = 'implemented' if implements else 'imported'
+            msg = f"Cannot delete Profile {self.id}. It is {relation} by Profile {imported_by} (and maybe others)."
             if check_only:
                 logger.info(msg)
                 return False

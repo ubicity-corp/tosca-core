@@ -265,6 +265,63 @@ such a function has its value accepted and is reported as not checked, never as
 passed; it does not make the target fail. Treat the value as unchecked until the
 application that runs the artifact has evaluated the clause.
 
+## Implementing files
+
+A profile can declare functions without implementations, leaving each
+processor to supply its own. An **implementing file** supplies them: a TOSCA
+2.0 file whose top-level `implements` names an onboarded profile, by the name
+and version an import of it would use, and which adds implementations to that
+profile's functions. This is an extension of TOSCA 2.0, following a proposal to
+the TOSCA community.
+
+```yaml
+tosca_definitions_version: tosca_2_0
+profile: example.functions.python:1.0
+implements: example.functions:1.0
+imports:
+  - profile: example.artifacts:1.0
+functions:
+  to_string:
+    implementation:
+      primary:
+        type: Script
+        file: functions/to_string.py
+    signatures:
+      - {}
+      - implementation:
+          primary:
+            type: Script
+            file: functions/to_string_float.py
+```
+
+- Each `functions` entry names a function of the implemented profile and holds
+  only `implementation`. One at the function level applies to every signature;
+  one in `signatures` applies to the signature at the same position in the
+  function's list, and an empty entry leaves that signature to the function-level
+  implementation. Arguments, results, descriptions and metadata belong to the
+  implemented profile.
+- The file declares nothing of its own: no types, functions or service template.
+  It may import the profiles that declare its artifact types, and the implemented
+  profile's names are in its default namespace.
+- A signature that already has an implementation, declared with it or supplied
+  by another implementing file, is a conflict.
+- Onboarding the file is what puts its implementations into effect, for every
+  template that imports the implemented profile. It is never imported: an import
+  that names one is an error. The implemented profile is onboarded first, and
+  cannot be deleted while the file is onboarded; deleting the file removes its
+  implementations.
+- An implementation's artifact belongs to the implementing file: its `file` is
+  found in the implementing file's archive, and its type in that file's scope.
+- A profile shows its declarations as published. A signature implemented by an
+  implementing file has no `implementation` but an `implemented_by` naming that
+  file's profile; the implementing profile shows `implements` and its
+  implementations in the form its file gives them.
+
+`tosca-validate` onboards an implementing file after the profile it implements.
+Since tosca-core runs no implementation, an implementing file changes no
+verdict: a clause built on a function it implements is still reported as not
+checked.
+
 ## `--skip-file-checks`
 
 Turns off the checks that the files an artifact declares exist. Use it to

@@ -49,6 +49,10 @@ class ToscaSchema(BaseSchema):
     # TOSCA v2.x supports a 'profile' keyword.
     profile = fields.Str()
 
+    # An implementing file names the profile it adds implementations
+    # to (profile name and version), and declares nothing of its own.
+    implements = fields.Str()
+
     # Repository definitions
     repositories = NamedObjectMap(fields.Nested(RepositorySchema))
 

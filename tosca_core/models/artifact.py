@@ -22,6 +22,7 @@ import hashlib
 
 # Database support
 from tosca_core import db
+from sqlalchemy.orm import backref
 
 # Types on which this instance depends
 import tosca_core.models.template
@@ -127,6 +128,14 @@ class ToscaArtifact(tosca_core.models.template.ToscaTemplate):
     _signature_id =             db.Column(db.Integer,
                                           db.ForeignKey('tosca_signature.id'),
                                           nullable=True)
+    # The profile whose file defined a function signature's artifact.
+    # It is the signature's own profile, except where an implementing
+    # file supplied the artifact; it is then the implementing profile,
+    # which is the artifact's profile for everything else (its
+    # repository, the path its file is relative to, its type's scope).
+    _defining_profile_id =      db.Column(db.Integer,
+                                          db.ForeignKey('tosca_profile.id'),
+                                          nullable=True)
 
     ################################################################################
     # Fields
@@ -140,6 +149,14 @@ class ToscaArtifact(tosca_core.models.template.ToscaTemplate):
     ################################################################################
     # Relationships
     ################################################################################
+
+    # Deleting the defining profile deletes the artifacts it defined,
+    # including those it attached to another profile's signatures.
+    defining_profile =   db.relationship('ToscaProfile',
+                                          uselist=False,
+                                          foreign_keys='ToscaArtifact._defining_profile_id',
+                                          backref=backref('defined_artifacts',
+                                                          cascade='all'))
 
     # Every artifact has a repository
     repo =               db.relationship('ToscaRepository',
@@ -263,7 +280,9 @@ class ToscaArtifact(tosca_core.models.template.ToscaTemplate):
         _containing_signature relationships are created as a
         'backref' and not defined here.
         """
-        if self._containing_type:
+        if self.defining_profile is not None:
+            return self.defining_profile
+        elif self._containing_type:
             return self._containing_type.profile
         elif self._containing_operation_declaration:
             return self._containing_operation_declaration.profile
