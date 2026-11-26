@@ -53,7 +53,7 @@ class ToscaRelationshipType(tosca_core.models.managed_type.ToscaManagedType):
     valid_kinds = ['ASSOCIATION', 'DEPENDENCY', 'CONTAINMENT' ]
     default_kind = 'DEPENDENCY'
 
-    # The kind the type states in its metadata (relationship_kind), copied
+    # The kind the type states in its metadata (relationship-kind), copied
     # here by validation. TOSCA defines no kinds and no keyname for one; the
     # column stays because it is part of the database format.
     _kind = db.Column(db.String)
@@ -372,7 +372,7 @@ class ToscaRelationshipType(tosca_core.models.managed_type.ToscaManagedType):
 
     def get_kind(self) -> str:
         """Return the kind of relationship this is: the one its metadata
-        states ('metadata: {relationship_kind: ...}', or
+        states ('metadata: {relationship-kind: ...}', or
         'relationship-kind'), else its parent type's kind, else the default.
         """
         try:

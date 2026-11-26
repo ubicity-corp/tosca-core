@@ -10,7 +10,8 @@ What tosca-core promises to keep stable, and what it does not.
 2. the library entry points: validating, onboarding, building a catalog,
    units of work;
 3. configuration: the settings and the environment variables;
-4. embedding: extending validation, and what a service of instances answers.
+4. embedding: extending validation, and what a service of instances answers
+   (provisional, below).
 
 Each is listed in full below. The names of 2 and 4, with the error types
 and the configuration object, are exported by the `tosca_core` package
@@ -33,6 +34,11 @@ Semantic versioning, from 1.0:
   works already;
 - only a **major** release (1 to 2) changes it incompatibly, and says what
   changed and what to do in [CHANGELOG.md](../CHANGELOG.md).
+
+**Provisional** names are public, but may change in a minor release while
+the applications that embed tosca-core are few: everything under 4.
+Embedding, and the `STATE_NAMES` setting. A minor release that changes one
+says what changed and what to do in [CHANGELOG.md](../CHANGELOG.md).
 
 The internal tier may change in any release.
 
@@ -126,13 +132,15 @@ takes effect.
 | `WORK_DIR` | `tosca-core` under `XDG_CACHE_HOME`, or `~/.cache/tosca-core` | `TOSCA_CORE_DIR` |
 | `LOCAL_REPO_ROOT` | `WORK_DIR/repository` | |
 | `LOCAL_REPOSITORY_ROOTS` | none | `TOSCA_CORE_LOCAL_REPOSITORY_ROOTS` (absolute, separated like `PATH`) |
-| `STATE_NAMES`, the states the application's workflows use; a `set_state` naming another is logged as a warning, never refused | none: any state accepted | |
+| `STATE_NAMES` (provisional), the states the application's workflows use; a `set_state` naming another is logged as a warning, never refused | none: any state accepted | |
 | `MODEL_MODULES`, `EXTENSION_MODULES` | tosca-core's models; none | |
 | `SUPPORTED_DEFINITIONS_VERSIONS` | TOSCA 2.0 and Simple Profile 1.0–1.3 | |
 
 `TOSCA_CORE_PROFILES` gives `tosca-validate` its profile trees.
 
 ## 4. Embedding
+
+Provisional (see *Versions*).
 
 An application that runs what tosca-core validates extends it from modules
 listed in `EXTENSION_MODULES`, which `bootstrap()` imports:

@@ -88,7 +88,7 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("no targets given")
 
     if args.reset:
-        from tosca_core.lint import cache
+        from tosca_core.cli import cache
         deleted = cache.reset()
         if not args.quiet:
             what = ", ".join(str(d) for d in deleted) if deleted else "nothing to delete"
@@ -109,8 +109,8 @@ def main(argv: list[str] | None = None) -> int:
             print(message, file=sys.stderr)
 
     from tosca_core.constants import constants
-    from tosca_core.lint import cache
-    from tosca_core.lint.profiles import Selection
+    from tosca_core.cli import cache
+    from tosca_core.cli.profiles import Selection
 
     selection = Selection(tuple(args.only_profile or ()),
                           tuple(args.exclude_profile or ()))
@@ -144,9 +144,9 @@ def main(argv: list[str] | None = None) -> int:
         from tosca_core.catalog import CatalogError
         bootstrap(f"sqlite:///{run_db}")
 
-        from tosca_core.lint import report
-        from tosca_core.lint.profiles import unsupported
-        from tosca_core.lint.validate import Result, validate
+        from tosca_core.cli import report
+        from tosca_core.cli.profiles import unsupported
+        from tosca_core.cli.validate import Result, validate
 
         if hit:
             log(f"catalog: cache hit ({key})")

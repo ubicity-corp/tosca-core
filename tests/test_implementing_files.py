@@ -24,7 +24,7 @@ import pytest
 from tosca_core import db
 from tosca_core.core import reset_session
 from tosca_core.csar import onboard_csar
-from tosca_core.lint.profiles import _imports_of
+from tosca_core.cli.profiles import _imports_of
 from tosca_core.models import exceptions as te
 from tosca_core.models.profile import get_profile_by_name
 from tosca_core.schema.v2.profile import ProfileDetailSchema

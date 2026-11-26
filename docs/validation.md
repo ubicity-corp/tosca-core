@@ -397,7 +397,7 @@ a rise.
                                  report, delete the run
 ```
 
-| module (`tosca_core/lint/`) | |
+| module (`tosca_core/cli/`) | |
 |---|---|
 | `__main__.py` | the command: options, the run directory, configuration restored afterwards |
 | `profiles.py` | discovery, the `imports:` graph, ordering, selection, refusal |

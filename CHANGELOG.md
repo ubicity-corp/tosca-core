@@ -24,12 +24,23 @@ ALTER TABLE tosca_import ADD COLUMN implements BOOLEAN DEFAULT FALSE;
 A function signature's existing implementation artifacts, with no defining
 profile recorded, are taken as their own profile's.
 
+**Embedding and `STATE_NAMES` are provisional** ([docs/api.md](docs/api.md#versions)):
+public, but they may change in a minor release, which says what changed and
+what to do here. Nothing changes in them in this release.
+
 **Workflow inputs follow the rules service-template inputs follow.** Both are
 incoming parameters (TOSCA 2.0, Parameter Definition), and one implementation
 now validates the values supplied for either. For a workflow this changes two
 things: a value supplied for an input with a fixed `value` is refused, since a
 fixed value cannot be changed, where it was accepted; and a required input
 with a fixed `value` needs nothing supplied, where it was refused.
+
+**`tosca_core.lint` is now `tosca_core.cli`.** It holds what `tosca-validate`
+runs; the command is unchanged. Not public API, but an import of
+`tosca_core.lint` needs the new name.
+
+**The `kind` keyname's error names `relationship-kind`**, the kebab-case
+metadata key; `relationship_kind` is still accepted.
 
 ## 1.0.0
 

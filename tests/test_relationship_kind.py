@@ -1,7 +1,7 @@
 """
 How a relationship type's kind is found.
 
-A type states its kind in ``metadata: {relationship_kind: ...}``, as the
+A type states its kind in ``metadata: {relationship-kind: ...}``, as the
 TOSCA community does; failing that, it takes its parent type's kind, and a
 type with neither and no parent is a DEPENDENCY. The metadata is read by
 ``get_kind()`` itself, not only copied in by validation, so a type has its
@@ -58,7 +58,7 @@ def test_the_metadata_spelling_without_validation():
 @pytest.mark.parametrize("schema", [v1_schema, v2_schema], ids=["1.3", "2.0"])
 def test_the_kind_keyname_is_refused_naming_metadata(schema):
     errors = schema.validate({"derived_from": "DependsOn", "kind": "CONTAINMENT"})
-    assert "relationship_kind: CONTAINMENT" in str(errors["kind"])
+    assert "relationship-kind: CONTAINMENT" in str(errors["kind"])
 
 
 @pytest.mark.parametrize("schema", [v1_schema, v2_schema], ids=["1.3", "2.0"])

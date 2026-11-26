@@ -13,9 +13,9 @@ from pathlib import Path
 import pytest
 
 from tosca_core.constants import constants
-from tosca_core.lint import cache, profiles, report
-from tosca_core.lint.__main__ import EXIT_ERROR, EXIT_FINDINGS, EXIT_OK, main
-from tosca_core.lint.validate import Finding, Result, entry_point_problem, flatten
+from tosca_core.cli import cache, profiles, report
+from tosca_core.cli.__main__ import EXIT_ERROR, EXIT_FINDINGS, EXIT_OK, main
+from tosca_core.cli.validate import Finding, Result, entry_point_problem, flatten
 
 
 def _profile(root: Path, *parts: str) -> Path:

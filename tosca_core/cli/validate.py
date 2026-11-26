@@ -8,7 +8,7 @@ import time
 from pathlib import Path
 from typing import Any, NamedTuple
 
-from tosca_core.lint import layout
+from tosca_core.cli import layout
 
 
 class Finding(NamedTuple):

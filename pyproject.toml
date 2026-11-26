@@ -47,7 +47,7 @@ flask = ["Flask"]
 test = ["pytest", "Flask"]
 
 [project.scripts]
-tosca-validate = "tosca_core.lint.__main__:main"
+tosca-validate = "tosca_core.cli.__main__:main"
 
 [tool.setuptools.packages.find]
 include = ["tosca_core*"]

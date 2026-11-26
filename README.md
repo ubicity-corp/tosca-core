@@ -35,38 +35,9 @@ From a checkout, with the test dependencies:
 pip install -e ".[test]"
 ```
 
-## Validate a template
-
-Validation needs a catalog holding the normative profiles, which every
-TOSCA definition ultimately derives from. Build one, then validate:
-
-```python
-from tosca_core import (bootstrap, create_tables, load_normative_profiles,
-                        session_scope, validate_csar)
-
-bootstrap()                      # bind the database, load the models
-with session_scope():
-    create_tables()
-with session_scope():
-    load_normative_profiles()    # TOSCA 2.0 and Simple Profile 1.3
-
-errors = validate_csar("service.yaml")
-print(errors or "valid")
-```
-
-`validate_csar` persists nothing. It returns `{}` for a valid target, a string
-when the target cannot be read at all, and otherwise the errors as a nested
-dict that follows the structure of the documents
-([docs/api.md](https://github.com/ubicity-corp/tosca-core/blob/master/docs/api.md)).
-A template that imports other profiles needs them onboarded first with
-`onboard_csar`, inside a `session_scope()` so they are committed.
-
-To validate many templates in one process, call `reset_session()` between
-them, so that a validation that fails leaves nothing behind for the next.
-
 ## Validate from the command line
 
-`tosca-validate` does the same from a shell, building the catalog once and
+`tosca-validate` validates from a shell, building the catalog once and
 caching it:
 
 ```console
@@ -109,6 +80,35 @@ and does not make the target fail.
 covers the rest: reading the output and its JSON, giving profile trees,
 restricting the catalog, the cache, and what validation leaves to the
 application that deploys a template.
+
+## Validate from Python
+
+From Python, validation needs a catalog holding the normative profiles, which every
+TOSCA definition ultimately derives from. Build one, then validate:
+
+```python
+from tosca_core import (bootstrap, create_tables, load_normative_profiles,
+                        session_scope, validate_csar)
+
+bootstrap()                      # bind the database, load the models
+with session_scope():
+    create_tables()
+with session_scope():
+    load_normative_profiles()    # TOSCA 2.0 and Simple Profile 1.3
+
+errors = validate_csar("service.yaml")
+print(errors or "valid")
+```
+
+`validate_csar` persists nothing. It returns `{}` for a valid target, a string
+when the target cannot be read at all, and otherwise the errors as a nested
+dict that follows the structure of the documents
+([docs/api.md](https://github.com/ubicity-corp/tosca-core/blob/master/docs/api.md)).
+A template that imports other profiles needs them onboarded first with
+`onboard_csar`, inside a `session_scope()` so they are committed.
+
+To validate many templates in one process, call `reset_session()` between
+them, so that a validation that fails leaves nothing behind for the next.
 
 ## Configuration
 

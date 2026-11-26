@@ -10,7 +10,7 @@ import json
 from pathlib import Path
 from typing import Iterable, TextIO
 
-from tosca_core.lint.validate import Result
+from tosca_core.cli.validate import Result
 
 _ARROW = " › "
 

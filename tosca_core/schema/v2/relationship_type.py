@@ -35,7 +35,7 @@ class RelationshipTypeSchema(ManagedTypeSchema):
         if isinstance(data, dict) and 'kind' in data:
             raise ValidationError(
                 {'kind': "not a TOSCA keyname: state the kind in metadata, "
-                         "as 'metadata: {relationship_kind: " + str(data['kind']) + "}'"})
+                         "as 'metadata: {relationship-kind: " + str(data['kind']) + "}'"})
         return data
 
     @post_load

@@ -17,7 +17,7 @@ import zipfile
 from pathlib import Path
 from typing import NamedTuple
 
-from tosca_core.lint import layout
+from tosca_core.cli import layout
 
 #: Never contribute to a profile, and would only add churn to a cache key
 IGNORED_DIRS = {".git", "__pycache__", ".github", "node_modules", ".pytest_cache"}

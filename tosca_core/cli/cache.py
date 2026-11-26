@@ -29,7 +29,7 @@ from pathlib import Path
 from typing import Callable, Iterable
 
 from tosca_core.constants import constants
-from tosca_core.lint.profiles import (IGNORED_DIRS, Profile, Selection,
+from tosca_core.cli.profiles import (IGNORED_DIRS, Profile, Selection,
                                       discover_profiles, dependency_order,
                                       select, zip_profile)
 
