@@ -5,7 +5,7 @@ What changed in each release that changes the public API
 semantic versioning: only a major release changes the public API
 incompatibly.
 
-## Unreleased
+## 1.1.0
 
 **Implementing files** ([docs/validation.md](docs/validation.md#implementing-files)):
 a TOSCA 2.0 file with a top-level `implements` adds implementations to an
