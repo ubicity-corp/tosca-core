@@ -18,12 +18,7 @@ The public API, what stays stable from one release to the next, is in
 
 ```bash
 pip install tosca-core
-pip install "tosca-core[flask]"   # when serving the model through a Flask REST API
 ```
-
-The `flask` extra only matters to an application that serves the model over
-HTTP: dump-only URL fields link entities to its resources, and without Flask
-they are omitted.
 
 Python 3.10 or later. tosca-core keeps its catalog in a database through
 SQLAlchemy. By default that is an in-memory SQLite database, so there is no
@@ -149,8 +144,8 @@ pytest
 ```
 
 `tests/test_standalone.py` checks, in a separate interpreter, that every
-module imports and a template validates with Flask and any embedding
-application unavailable.
+module imports and a template validates with no embedding application
+installed.
 
 ## Contributing
 

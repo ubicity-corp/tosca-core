@@ -9,14 +9,8 @@ __email__ = "info@ubicity.com"
 import logging
 logger = logging.getLogger(__name__)
 
-# URLs to REST resources
-from tosca_core.schema.url import url_for
-
 # Marshmallow support
-from marshmallow import fields, post_load, missing
-
-# Type hints
-from typing import Any
+from marshmallow import fields, post_load
 
 # Schemas used by CapabilityDeclarationSchema
 from tosca_core.schema.base import BaseSchema
@@ -39,27 +33,13 @@ class RelationshipDeclarationSchema(BaseSchema):
 
     relationship =   fields.Nested(ManagedDeclarationSchema, allow_none=True)
     node =           fields.Str(allow_none=True)
-    node_url =       fields.Method('get_node_url')
     capability =     fields.Str(allow_none=True)
-    capability_url = fields.Method('get_capability_url')
     count_range =    fields.List(fields.Raw())
     node_filter =    fields.Dict()  
     allocation =     fields.Dict()
 
     # default field used for short-hand grammar
     default_data_key = 'capability'
-
-    def get_node_url(self, obj: Any) -> Any:
-        url = None
-        if obj._target_node_type:
-            url = url_for('type', type_type='node', type_id=obj._target_node_type_id)
-        return url if url is not None else missing
-
-    def get_capability_url(self, obj: Any) -> Any:
-        url = None
-        if obj._target_capability_type:
-            url = url_for('type', type_type='capability', type_id=obj._target_capability_type_id)
-        return url if url is not None else missing
 
     @post_load
     def make_object(self, data: dict, **kwargs) -> ToscaRelationshipDeclaration:

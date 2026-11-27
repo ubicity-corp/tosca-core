@@ -12,7 +12,6 @@ logger = logging.getLogger(__name__)
 # Marshmallow support
 from marshmallow import fields, post_load
 from .functions import refuse_service_input
-from tosca_core.schema.url_field import URLField
 
 # Schemas used by ArtifactTemplateSchema
 from .template import TemplateSchema
@@ -30,7 +29,6 @@ def create_artifact_template(**kwargs) -> ToscaArtifact:
 
 class ArtifactTemplateSchema(TemplateSchema):
     type =              fields.Str()
-    type_url =          URLField("type", type_type='<type_class>', type_id='<_type_id>')
     repository =        fields.Str()
     file =              fields.Str()
     artifact_version=   fields.Str()    

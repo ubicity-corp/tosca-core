@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 # Marshmallow support
 from marshmallow import fields
 from tosca_core.schema.named_object_map import NamedObjectMap
-from tosca_core.schema.url_field import URLField
 
 # Schemas used by ManagedTemplateSchema
 from .template import TemplateSchema
@@ -27,7 +26,6 @@ class ManagedTemplateSchema(TemplateSchema):
     attributes = fields.Dict()
     directives = fields.List(fields.Str())
     type =       fields.Str()
-    type_url =   URLField("type", type_type='<type_class>', type_id='<_type_id>')
     copy =       fields.Str(load_only=True)
 
     # default field used for short-hand grammar

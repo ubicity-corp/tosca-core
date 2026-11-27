@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 
 # Marshmallow support
 from marshmallow import fields, post_load
-from tosca_core.schema.url_field import URLField
 
 # Schemas on which this schema depends
 from tosca_core.schema.base import BaseSchema
@@ -23,7 +22,6 @@ from .node_filter import NodeFilterSchema
 class SubstitutionMappingsSchema(BaseSchema):
 
     node_type: fields.Str = fields.Str()
-    substitutes: URLField = URLField('type', type_type='node', type_id='<substitutes_id>')
     substitution_filter: fields.Nested = fields.Nested(NodeFilterSchema)
     attributes: fields.Dict = fields.Dict()
     properties: fields.Dict = fields.Dict()

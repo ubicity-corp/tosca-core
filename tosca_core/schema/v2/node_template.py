@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 from marshmallow import fields, post_load
 from tosca_core.schema.named_object_map import NamedObjectMap
 from tosca_core.schema.named_object_list import NamedObjectList
-from tosca_core.schema.url_field import URLField
 
 # Schemas used by NodeTemplateSchema
 from .managed_template import ManagedTemplateSchema
@@ -36,8 +35,6 @@ class NodeTemplateSchema(ManagedTemplateSchema):
     node_filter =  fields.Dict() 
     directives =   fields.List(fields.Str())
     
-    url = URLField('node', node_id='<id>')
-
     @post_load
     def make_object(self, data: dict, **kwargs) -> ToscaNodeTemplate:
         return create_node_template(**data)

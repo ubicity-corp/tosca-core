@@ -5,6 +5,16 @@ What changed in each release that changes the public API
 semantic versioning: only a major release changes the public API
 incompatibly.
 
+## Unreleased
+
+**Dumped definitions carry no links.** The schemas no longer write `url`,
+`type_url`, `parent_url`, `node_url`, `capability_url` or `substitutes`,
+which linked to an application's REST resources and were filled in only
+while a Flask app served them. The schemas are internal
+([docs/api.md](docs/api.md)), so the public API is unchanged; an
+application that serves the model adds such links in its own output
+schemas. The `flask` extra is removed: tosca-core needs no web framework.
+
 ## 1.1.0
 
 **Implementing files** ([docs/validation.md](docs/validation.md#implementing-files)):

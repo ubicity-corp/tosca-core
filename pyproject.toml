@@ -39,12 +39,7 @@ Changelog = "https://github.com/ubicity-corp/tosca-core/blob/master/CHANGELOG.md
 Issues = "https://github.com/ubicity-corp/tosca-core/issues"
 
 [project.optional-dependencies]
-# Dump-only URL fields link entities to a Flask REST server's resources
-# when one is serving; without Flask they are omitted.
-flask = ["Flask"]
-# Flask for tests/test_url_field.py; test_standalone.py checks the core
-# without it, in an interpreter of its own.
-test = ["pytest", "Flask"]
+test = ["pytest"]
 
 [project.scripts]
 tosca-validate = "tosca_core.cli.__main__:main"

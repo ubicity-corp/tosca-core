@@ -14,7 +14,6 @@ from marshmallow import fields
 
 # Type hints
 from typing import Any, Optional
-from tosca_core.schema.url_field import URLField
 
 # Schemas on which this schema depends
 from tosca_core.schema.base import BaseSchema
@@ -42,7 +41,6 @@ class RequirementMappingList(fields.List):
 class SubstitutionMappingsSchema(BaseSchema):
 
     node_type = fields.Str()
-    substitutes = URLField('type', type_type='node', type_id='<substitutes_id>')
     substitution_filter =  fields.Dict()
     attributes = fields.Dict()
     properties = fields.Dict()

@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 # Marshmallow support
 from marshmallow import fields
 from tosca_core.schema.named_object_list import NamedObjectList
-from tosca_core.schema.url_field import URLField
 
 # Schemas used by NodeFilterSchema
 from tosca_core.schema.base import BaseSchema
@@ -26,6 +25,5 @@ class CapabilityFilterSchema(BaseSchema):
 
 class NodeFilterSchema(BaseSchema):
     node = fields.Str(dump_only=True)
-    type_url = URLField("type", type_type='<type_class>', type_id='<_type_id>')
     properties = NamedObjectList(fields.Nested(ConstraintSchema))
     capabilities = NamedObjectList(fields.Nested(CapabilityFilterSchema))

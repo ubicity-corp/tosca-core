@@ -48,7 +48,6 @@ tosca-validate -p <profile-tree> <target>...   # validate from the shell (see RE
 - `tests/test_tosca_1_3_path_head.py` — a TOSCA 2.0 path may not start at `TARGET` or `SOURCE`
 - `tests/test_recognized_names.py` — the dash-case interface and operation names, and the old spellings still accepted
 - `tests/test_substituted_requirement_warnings.py` — the warning for requirements a substitution does not carry
-- `tests/test_url_field.py` — a URL field is left out where no app serves its endpoint, and null where the object names nothing
 - `tests/test_service_inputs_reach_properties.py` — TOSCA 2.0 refuses `$get_input` in operation inputs and artifact properties
 - `tests/test_dependency_loops.py` — onboarding refuses a template whose explicit requirements form a loop
 - `tests/test_artifact_file_location.py` — where an artifact's file is looked for: under its named repository from any template in the archive, or beside the template that declares it
@@ -62,7 +61,7 @@ tosca-validate -p <profile-tree> <target>...   # validate from the shell (see RE
 
 `tests/test_standalone.py` enforces the first two.
 
-- **No import of an embedding application, and no module-level import of Flask.** Flask is reached only through the lazy `url_for` in `tosca_core/schema/url.py`, which returns `None` without it.
+- **No import of an embedding application, and no web framework.** The schemas dump definitions only; links to an application's REST resources are the application's to add in its own output schemas.
 - **The core does not name runtime classes, and creates no instances.** Building instances from templates is the embedding application's. A relationship between a definitional model and a runtime one is declared on the runtime side (as a `backref`), so the mappers here configure without it.
 - **The core knows nothing of how instances are named or operations ordered.** A path's named head against a service of instances is the service's to resolve (`resolve_node(name, index, select)`, the contract in `docs/api.md`), and whether an operation certain to run before the reading one writes an attribute is the attribute-written check's (`extensions.set_attribute_written_check`). The presence check for a required value stays here, since TOSCA's requiredness decides it.
 - **A clause that cannot be evaluated is reported, not passed.** A validation clause whose function cannot be evaluated where validation runs (one a profile implements with an artifact, Python or not, with no function evaluator installed) goes through `tosca_core/models/unchecked.py`: the value is accepted and the clause recorded as not checked, which `tosca-validate` reports. Never let such a clause count as checked.

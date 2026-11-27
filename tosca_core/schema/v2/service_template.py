@@ -16,7 +16,6 @@ from tosca_core.schema.named_object_list import NamedObjectList
 
 # Schemas used by ServiceTemplateSchema
 from tosca_core.schema.base import BaseSchema
-from tosca_core.schema.url_field import URLField
 from .property_declaration import (
     InputDeclarationSchema,
     ServiceOutputDeclarationSchema)
@@ -37,7 +36,6 @@ from tosca_core.models.service_template import ToscaServiceTemplate
 
 class ServiceTemplateSchema(BaseSchema):
     id = fields.Integer(dump_only=True)
-    url = URLField('template', template_id='<id>')
     name = fields.Str(dump_only=True)
     creation_time = fields.DateTime(dump_only=True)
 

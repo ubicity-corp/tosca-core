@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 
 # Marshmallow support
 from marshmallow import fields
-from tosca_core.schema.url_field import URLField
 
 # Schemas on which this schema depends
 from tosca_core.schema.base import BaseSchema
@@ -22,4 +21,3 @@ from tosca_core.schema.base import BaseSchema
 class DeclarationSchema(BaseSchema):
     name = fields.Str()
     type = fields.Str()
-    type_url = URLField("type", type_type='<type_class>', type_id='<_type_id>')
